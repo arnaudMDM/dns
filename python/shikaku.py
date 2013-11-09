@@ -13,20 +13,29 @@ gridInit = [0,1,1,1,2,2,2,2,2,3,3,3,3,4,4,4,4,5,5,6,7,7,7,7,7,7,8,8,8,8,8,8,8,8,
 class ListSquare:
     listSquareEmpty = []
     squareFull = None
+    def __init__(self):
+        self.listSquareEmpty = []
+        self.squareFull = None
 
 class SquareFull:
+    valeur = None
     #setSquareEmpty = set()
     listListSquare = []
-    def removeList(self,squareList):
+    def __init__(self, _valeur):
+        self.listListSquare = []
+        self.valeur = _valeur
+    def removeList(self, squareList):
         for i in squareList.listSquareEmpty:
             i.removeList(squareList)
         self.listListSquare.remove(squareList)
         if len(self.listListSquare) == 1:
             global listGdSqFl
             listGdSqFl.append(self)
-    def addFinalList(self,squareList):
+    def addFinalList(self, squareList):
+        print 'full: ', self.valeur
         for i in squareList.listSquareEmpty:
-            i.remove(self)
+            print 'vide: ', i.valeur
+            i.listListSquare.remove(squareList)
             i.askSqFlsToRmList()
             global listGdSqEm
             if listGdSqEm.count(i) > 0:
@@ -34,13 +43,18 @@ class SquareFull:
             listInitSqEm.remove(i)
         global listGdLstSqFinal
         listGdLstSqFinal.append(squareList)
+        print ''
 
 class SquareEmpty:
+    valeur = None
     listListSquare = []
+    def __init__(self, _valeur):
+        self.valeur = _valeur
+        self.listListSquare = []
     def askSqFlsToRmList(self): #askSquareFullsToRemoveList
         while len(self.listListSquare) > 0:
-            self.listListSquare[0].squareFull.removeList(self.listSquare[0])
-    def removeList(self,squareList):
+            self.listListSquare[0].squareFull.removeList(self.listListSquare[0])
+    def removeList(self, squareList):
         self.listListSquare.remove(squareList)
         if len(self.listListSquare) == 1:
             global listGdSqEm
@@ -56,16 +70,37 @@ def inFull(x):
 
 relationEm = dict()
 for i in filter(notInFull, range(1, 101)):
-    temp = SquareEmpty()
+    temp = SquareEmpty(i)
     relationEm[i] = temp
     listInitSqEm.append(temp)
 
 relationFl = dict()
 for i in filter(inFull, range(1, 101)):
-    temp = SquareFull()
+    temp = SquareFull(i)
     relationFl[i] = temp
 
 #def column(x): return lambda y: y*10 + x
+
+def clearListNotGood(list, j):
+    for i in list[1]:
+        index = list[1].index(i)
+        if i[1] - i[0] + 1 >= j[1]:
+            list[2][index] = True
+        else:
+            list[0].pop(index)
+            list[1].remove(i)
+            list[2].pop(index)
+    return list
+
+def allEmptySquare(list, minMoinsX, minPlusX, k, ind, j):
+    if gridInit[ind - 1] - gridInit[minMoinsX + k * 10] != 0:
+        minMoinsX = gridInit.index(gridInit[ind - 1]) % 10
+    if gridInit[minPlusX + k * 10] - gridInit[ind] != 0:
+        minPlusX = (gridInit.index(gridInit[ind] + 1) - 1) % 10 
+    if minPlusX - minMoinsX < j[0]:
+        return False, clearListNotGood(list, j), minMoinsX, minPlusX
+    else:
+        return True, list, minMoinsX, minPlusX
 
 def f():
     for i in listeSquareFullInit:
@@ -79,64 +114,59 @@ def f():
             if minPlusY > 10:
                 minPlusY = 10
             minMoinsX =  (i[0] - j[0]) % 10
-            if minMoinsX > i[0]:
+            if minMoinsX >= (i[0] - 1) % 10 + 1:
                 minMoinsX = 0
             minPlusX = (i[0] + j[0] - 1) % 10
-            if minPlusX < i[0]:
+            if minPlusX < (i[0] - 1) % 10 + 1:
                 minPlusX = 10
             #k = map(column(col + 1), range(minMoinsY, minPlusY))
             temp = [[],[],[]]
+            minMoinsXBase = minMoinsX
+            minPlusXBase = minPlusX
             for k in range(minMoinsY, minPlusY):
+                minMoinsX = minMoinsXBase
+                minPlusX = minPlusXBase
                 global gridInit
                 resultat = gridInit[minPlusX + 10 * k] - gridInit[minMoinsX + 10 * k]
                 if k != (i[0] - 1) / 10:
                     if resultat != 0:
                         ind = (i[0] - 1) % 10 + 1 + k * 10
                         if gridInit[ind] - gridInit[ind - 1] != 0:
-                            del temp[0][:]
-                            del temp[1][:]
-                            del temp[2][:]
+                            temp = clearListNotGood(temp, j)
                             continue
-                        if gridInit[ind] - gridInit[minMoinsX] != 0:
-                            minMoinsX = gridInit.index(gridInit[ind - 1])
-                        if gridInit[minPlusX] - gridInit[ind] != 0:
-                            minPlusX = gridInit.index(gridInit[ind] + 1) - 1
-                        if minPlusX - minMoinsX < j[0]:
-                            del temp[0][:]
-                            del temp[1][:]
-                            del temp[2][:]
+                        res,temp,minMoinsX,minPlusX = allEmptySquare(temp, minMoinsX, minPlusX, k, ind, j)
+                        if not res:
                             continue
                 else:
                     if resultat != 1:
                         ind = (i[0] - 1) % 10 + 1 + k * 10
-                        if gridInit[ind] - gridInit[minMoinsX] != 0:
-                            minMoinsX = gridInit.index(gridInit[ind - 1])
-                        if gridInit[minPlusX] - gridInit[ind] != 0:
-                            minPlusX = gridInit.index(gridInit[ind] + 1) - 1
-                        if minPlusX - minMoinsX < j[0]:
-                            del temp[0][:]
-                            del temp[1][:]
-                            del temp[2][:]
+                        res,temp,minMoinsX,minPlusX = allEmptySquare(temp, minMoinsX, minPlusX, k, ind, j)
+                        if not res:
                             continue
+                for l in temp[0]:
+                    if (l[0] <= minMoinsX or l[1] > minPlusX):
+                        index = temp[0].index(l)
+                        if temp[1][index][1] - temp[1][index][0] + 1 >= j[1]:
+                            temp[2][index] = True
+                        else:
+                            temp[2].pop(index)
+                            temp[1].pop(index)
+                            temp[0].remove(l)
                 for l in range(minMoinsX + 1, minPlusX - j[0] + 2):
                     try:
-                        temp[1][temp[0].index([l, l + j[0] - 1])] += 1
+                        index = temp[0].index([l, l + j[0] - 1])
+                        if not temp[2][index]:
+                            temp[1][index][1] += 1
                     except:
                         temp[0].append([l, l + j[0] - 1])
-                        temp[1].append(1)
-                        temp[2].append([k + 1, l])
-                for l in temp[0]:
-                    if (l[0] <= minMoinsX or l[1] > minPlusX) and temp[1][temp[0].index(l)] < i[1]:
-                        index = temp[0].index(l)
-                        temp[2].pop(index)
-                        temp[1].pop(index)
-                        temp[0].remove(l)
+                        temp[1].append([k + 1, k + 1])
+                        temp[2].append(False)
             for k in temp[0]:
                 index = temp[0].index(k)
-                if temp[1][index] >= i[1]://changer cette partie car elle ne marche pas dans un sens
-                    lig = temp[2][index][0]
-                    col = temp[2][index][1]
-                    for l in range(lig, lig + temp[1][index] - j[1] + 1):
+                if temp[1][index][1] - temp[1][index][0] + 1 >= j[1]:
+                    lig = temp[1][index][0]
+                    col = temp[0][index][0]
+                    for l in range(lig, temp[1][index][1] - j[1] + 2):
                         listSquare = ListSquare()
                         listSquare.squareFull = squareFull
                         squareFull.listListSquare.append(listSquare)
@@ -148,14 +178,25 @@ def f():
                                     continue
                                 squareEmpty.listListSquare.append(listSquare)
                                 listSquare.listSquareEmpty.append(squareEmpty)
-    print 'oui'
+        if len(squareFull.listListSquare) == 1:
+            global listGdSqFl
+            listGdSqFl.append(squareFull)
+    global listInitSqEm
+    for i in listInitSqEm:
+        if len(i.listListSquare) == 1:
+            listGdSqEm.append(i)
     while len(listInitSqEm) > 0:
         while len(listGdSqFl) > 0:
             while len(listGdSqFl) > 0:
                 temp = listGdSqFl.pop(0)
-                temp.squareFull.addFinalList(temp.listSquareEmpty)
+                temp.addFinalList(temp.listListSquare[0])
             while len(listGdSqEm) > 0:
                 temp = listGdSqEm.pop(0)
-                temp.squareFull.listSquare[0].addFinalList(temp.listSquareEmpty)
+                squareFull = temp.listListSquare[0].squareFull
+                try:
+                    listGdSqFl.remove(squareFull)
+                except:
+                    pass
+                squareFull.addFinalList(temp.listListSquare[0])
         # if len(listInitSqEm) > 0:
 
