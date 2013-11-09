@@ -24,23 +24,38 @@ class SquareFull:
     def __init__(self, _valeur):
         self.listListSquare = []
         self.valeur = _valeur
-    def removeList(self, squareList):
+    def removeList(self, squareList, SquareEmExcept):
         for i in squareList.listSquareEmpty:
-            i.removeList(squareList)
+            if i != SquareEmExcept:
+                # try:
+                i.removeList(squareList)
+                # except:
+                #     return
         self.listListSquare.remove(squareList)
         if len(self.listListSquare) == 1:
             global listGdSqFl
             listGdSqFl.append(self)
     def addFinalList(self, squareList):
+        try:
+            global listGdSqFl
+            listGdSqFl.remove(self)
+        except:
+            pass
         print 'full: ', self.valeur
         for i in squareList.listSquareEmpty:
             print 'vide: ', i.valeur
-            i.listListSquare.remove(squareList)
-            i.askSqFlsToRmList()
+            i.askSqFlsToRmList(self.valeur)
             global listGdSqEm
             if listGdSqEm.count(i) > 0:
-                listGdSqEm.remove(i)
+                listGdSqEm.remove(i) 
             listInitSqEm.remove(i)
+        for i in self.listListSquare:
+            if i != squareList:
+                for j in i.listSquareEmpty:
+                    if j not in squareList.listSquareEmpty:
+                        j.listListSquare.remove(i)
+                        if len(j.listListSquare) == 1:
+                            listGdSqEm.append(j)
         global listGdLstSqFinal
         listGdLstSqFinal.append(squareList)
         print ''
@@ -51,9 +66,10 @@ class SquareEmpty:
     def __init__(self, _valeur):
         self.valeur = _valeur
         self.listListSquare = []
-    def askSqFlsToRmList(self): #askSquareFullsToRemoveList
-        while len(self.listListSquare) > 0:
-            self.listListSquare[0].squareFull.removeList(self.listListSquare[0])
+    def askSqFlsToRmList(self, _valeur): #askSquareFullsToRemoveList
+        for i in self.listListSquare:
+            if i.squareFull.valeur != _valeur:
+                i.squareFull.removeList(i, self)
     def removeList(self, squareList):
         self.listListSquare.remove(squareList)
         if len(self.listListSquare) == 1:
@@ -193,10 +209,6 @@ def f():
             while len(listGdSqEm) > 0:
                 temp = listGdSqEm.pop(0)
                 squareFull = temp.listListSquare[0].squareFull
-                try:
-                    listGdSqFl.remove(squareFull)
-                except:
-                    pass
                 squareFull.addFinalList(temp.listListSquare[0])
         # if len(listInitSqEm) > 0:
 
