@@ -32,7 +32,7 @@ class SquareFull:
                 # except:
                 #     return
         self.listListSquare.remove(squareList)
-        if len(self.listListSquare) == 1:
+        if len(self.listListSquare) == 1 and add:
             global listGdSqFl
             listGdSqFl.append(self)
     def addFinalList(self, squareList):
