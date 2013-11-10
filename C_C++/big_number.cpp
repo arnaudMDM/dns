@@ -6,7 +6,6 @@ BigNum::BigNum(const string s){
 	string str = s;
 	if(str.empty())
 		throw "string empty";
-	bool negatif = false;
 	if(str[0] == '-'){
 		if(str.size() < 2)
 			throw "string not correct";
@@ -14,47 +13,48 @@ BigNum::BigNum(const string s){
 			negatif = true;
 			str.erase(0,1);
 	}
+	else
+		negatif = false;
 
 	for (int i = str.size() ; i > 0 ; i -= DIGIT){
-		if(i - DIGIT <= 0){
-			if(negatif)
-				listeNumbers.push_back(strtoll(str.substr(0, i).c_str(), NULL, 10) | 0x8000000000000000);
-			else
-				listeNumbers.push_back(strtoll(str.substr(0, i).c_str(), NULL, 10));
-		}
+		if(i - DIGIT <= 0)
+			listeNumbers.push_back(strtoll(str.substr(0, i).c_str(), NULL, 10));
 		else
 			listeNumbers.push_back(strtoll(str.substr(i - DIGIT, DIGIT).c_str(), NULL, 10));
 	}
 }
 
-BigNum::BigNum(const BigNum& other)
-{
+BigNum::BigNum(const BigNum& other){
 	listeNumbers = other.listeNumbers;
+	negatif = other.negatif;
 }
 
 BigNum::BigNum(long long int i){
 	if(i < 0)
-		i = ~i | 0x8000000000000000;
+		negatif = true;
+	else
+		negatif = false;
 
 	listeNumbers.push_back(i);
+}
+
+BigNum& BigNum::operator = (const BigNum& other){
+	listeNumbers = other.listeNumbers;
+	negatif = other.negatif;
+	return *this;
 }
 
 BigNum& BigNum::operator = (long long int i){
 	listeNumbers.clear();
 	if(i < 0)
-		i = ~i | 0x8000000000000000;
+		negatif = true;
+	else
+		negatif = false;
 
 	listeNumbers.push_back(i);
 }
 
 BigNum BigNum::operator / (BigNum& other){
-	bool negatif = false;
-	if((((listeNumbers.back() & 0x8000000000000000) != 0) && ((other.listeNumbers.back() & 0x8000000000000000) == 0)) || (((listeNumbers.back() & 0x8000000000000000) == 0) && ((other.listeNumbers.back() & 0x8000000000000000) != 0)))
-		negatif = true;
-
-	listeNumbers.back() &= 0x7fffffffffffffff;
-	other.listeNumbers.back() &= 0x7fffffffffffffff;
-
 	if(listeNumbers.size() < other.listeNumbers.size()){
 		return BigNum("0");
 	}
@@ -81,21 +81,21 @@ BigNum BigNum::operator / (BigNum& other){
 		diff = *this - temp;
 		i++;
 	}
-	return BigNum(i);
+	BigNum res(i);
+	if((negatif && !other.negatif) || (!negatif && other.negatif))
+		res.negatif = true;
+	else
+		res.negatif = false;
+	return res;
 }
 
 BigNum BigNum::operator * (BigNum& other){
 	BigNum res;
 
-	bool negatif = false;
-	if((((listeNumbers.back() & 0x8000000000000000) != 0) && ((other.listeNumbers.back() & 0x8000000000000000) == 0)) || (((listeNumbers.back() & 0x8000000000000000) == 0) && ((other.listeNumbers.back() & 0x8000000000000000) != 0)))
-		negatif = true;
-
-	bool negatifMe = ((listeNumbers.back() & 0x8000000000000000) != 0);
-	bool negatifOther = ((other.listeNumbers.back() & 0x8000000000000000) != 0);
-
-	listeNumbers.back() &= 0x7fffffffffffffff;
-	other.listeNumbers.back() &= 0x7fffffffffffffff;
+	if((negatif && !other.negatif) || (!negatif && other.negatif))
+		res.negatif = true;
+	else
+		res.negatif = false;
 
 	vector<long long int>* pMin;
 	vector<long long int>* pMax;
@@ -126,10 +126,8 @@ BigNum BigNum::operator * (BigNum& other){
 		tempAvReste = 0;
 		vector<short int> listeDigits;
 
-		for(unsigned long long int m = 1 ; m < 100000000000000000 ; m *= 10 ){
-			// printf ("hehe %lld\n", (*itMin % (m * 10)) / m);
+		for(unsigned long long int m = 1 ; m < 100000000000000000 ; m *= 10 )
 			listeDigits.push_back((*itMin % (m * 10)) / m);
-		}
 
 		while(itMax < pMax->end()){
 			tempApReste = 0;
@@ -220,37 +218,20 @@ BigNum BigNum::operator * (BigNum& other){
 		itMin++;
 		i++;
 	}
-
-	if(negatif)
-		res.listeNumbers.back() |= 0x8000000000000000;
-
-	if(negatifMe)
-		listeNumbers.back() |= 0x8000000000000000;
-	if(negatifOther)
-		other.listeNumbers.back() |= 0x8000000000000000;
-
 	return res;
 }
 
-BigNum& BigNum::operator = (const BigNum& other){
-	listeNumbers = other.listeNumbers;
-	return *this;
-}
-
 BigNum BigNum::operator - (BigNum& other){
-	other.listeNumbers.back() = ~(other.listeNumbers.back() | 0x7fffffffffffffff) | (other.listeNumbers.back() & 0x7fffffffffffffff);
+	other.negatif = !other.negatif;
 	return (*this + other);
 }
 
 BigNum BigNum::operator + (BigNum& other){
 	BigNum res;
+	res.negatif = false;
 
 	vector<long long int>* pMin = NULL;
 	vector<long long int>* pMax = NULL;
-	bool negatif = false;
-
-	bool negatifMe = ((listeNumbers.back() & 0x8000000000000000) != 0);
-	bool negatifOther = ((other.listeNumbers.back() & 0x8000000000000000) != 0);
 
 	if(listeNumbers.size() > other.listeNumbers.size()){
 		pMin = &(other.listeNumbers);
@@ -264,17 +245,17 @@ BigNum BigNum::operator + (BigNum& other){
 		vector<long long int>::reverse_iterator it1 = listeNumbers.rbegin();
 		vector<long long int>::reverse_iterator it2 = other.listeNumbers.rbegin();
 		while(it1 < listeNumbers.rend() && pMin == NULL){
-			if((*it1 & 0x7fffffffffffffff) > (*it2 & 0x7fffffffffffffff)){
+			if(*it1 > *it2){
 				pMin = &(other.listeNumbers);
 				pMax = &listeNumbers;
-				if((listeNumbers.back() & 0x8000000000000000) != 0)
-					negatif = true;
+				if(negatif)
+					res.negatif = true;
 			}
-			else if((*it1 & 0x7fffffffffffffff) < (*it2 & 0x7fffffffffffffff)){
+			else if(*it1 < *it2){
 				pMin = &listeNumbers;
 				pMax = &(other.listeNumbers);
-				if((other.listeNumbers.back() & 0x8000000000000000) != 0)
-					negatif = true;
+				if(other.negatif)
+					res.negatif = true;
 			}
 			it1++;
 			it2++;
@@ -291,13 +272,10 @@ BigNum BigNum::operator + (BigNum& other){
 	short int retenue = 0;
 	long long int temp;
 		
-	if((((listeNumbers.back() & 0x8000000000000000) != 0) && ((other.listeNumbers.back() & 0x8000000000000000) == 0)) || (((listeNumbers.back() & 0x8000000000000000) == 0) && ((other.listeNumbers.back() & 0x8000000000000000) != 0))){
+	if((negatif && !other.negatif) || (!negatif && other.negatif)){
 
-		if(((listeNumbers.back() & 0x8000000000000000) == 0 && listeNumbers.size() < other.listeNumbers.size()) || ((listeNumbers.back() & 0x8000000000000000) != 0 && listeNumbers.size() > other.listeNumbers.size()))
-			negatif = true;
-
-			listeNumbers.back() &= 0x7fffffffffffffff;
-			other.listeNumbers.back() &= 0x7fffffffffffffff;
+		if((!negatif && listeNumbers.size() < other.listeNumbers.size()) || (negatif && listeNumbers.size() > other.listeNumbers.size()))
+			res.negatif = true;
 
 		while(itMin < pMin->end()){
 			temp = *itMax - *itMin - retenue;
@@ -329,17 +307,10 @@ BigNum BigNum::operator + (BigNum& other){
 
 		while(res.listeNumbers.back() == 0 && res.listeNumbers.size() > 1)
 			res.listeNumbers.pop_back();
-
-		if(negatif)
-			res.listeNumbers.back() |= 0x8000000000000000;
 	}
 	else{
-		if(((listeNumbers.back() & 0x8000000000000000) != 0) && ((other.listeNumbers.back() & 0x8000000000000000) != 0)){
-			negatif = true;
-			listeNumbers.back() &= 0x7fffffffffffffff;
-			other.listeNumbers.back() &= 0x7fffffffffffffff;
-		}
-
+		if(negatif && other.negatif)
+			res.negatif = true;
 
 		while(itMin < pMin->end()){
 			temp = (*itMin) + (*itMax) + retenue;
@@ -369,33 +340,19 @@ BigNum BigNum::operator + (BigNum& other){
 					res.listeNumbers.push_back(*itMax);
 					itMax ++;
 				}
-				if(negatif && res.listeNumbers.back() != 0)
-					res.listeNumbers.back() |= 0x8000000000000000;
-
-				if(negatifMe)
-					listeNumbers.back() |= 0x8000000000000000;
-				if(negatifOther)
-					other.listeNumbers.back() |= 0x8000000000000000;
 				return res;
 			}
 		}
 		if(retenue != 0)
 			res.listeNumbers.push_back(retenue);
-		if(negatif && res.listeNumbers.back() != 0)
-			res.listeNumbers.back() |= 0x8000000000000000;
-
-		if(negatifMe)
-			listeNumbers.back() |= 0x8000000000000000;
-		if(negatifOther)
-			other.listeNumbers.back() |= 0x8000000000000000;
 		return res;
 	}
 }
 
 int main(){
-	BigNum j("9999999999999999999999999999");
-	BigNum i("9999999999999999999999999999");
-	j = j + i;
+	BigNum j("1000000000000000000000000");
+	BigNum i("20000000000000000000000000000000000000000000000");
+	j = j * i;
 	cout << j <<endl;
 	//15 minutes multiplication 745000 numbers (500000 * 280000) ; 19 minutes multiplication 745000 numbers (350000 * 390000)
 	//4.2 seconds addition 548000 numbers
