@@ -1,36 +1,31 @@
-#listInitSqFl = [] #listInitSquareFull
+# -*- coding: utf8 -*-
+import copy
+
 listInitSqEm = [] #listInitSquareFull
 listGdSqFl = [] #listGoodSquareFull
 listGdSqEm = [] #listGoodSquareEmpty
 listGdLstSqFinal = [] #listGoodListSquare
-#listGdLstSqFinalTemp = [] #listGoodListSquareTemp
 
 diviseur = (((1,1)),((1,2),(2,1)),((1,3),(3,1)),((1,4),(4,1),(2,2)),((1,5),(5,1)),((1,6),(6,1),(2,3),(3,2)),((1,7),(7,1)),((1,8),(8,1),(2,4),(4,2)),((1,9),(9,1),(3,3)),((1,10),(10,1),(2,5),(5,2)),(),((2,6),(6,2),(3,4),(4,3)),(),((2,7),(7,2)),((3,5),(5,3)),((2,8),(8,2),(4,4)),(),((2,9),(9,2),(3,6),(6,3)),((2,10),(10,2),(4,5),(5,4)),((3,7),(7,3)),(),(),((3,8),(8,3),(4,6),(6,4)),((5,5)),(),((3,9),(9,3)),((4,7),(7,4)),(),((3,10),(10,3),(5,6),(6,5)),(),((4,8),(8,4)),(),(),((5,7),(7,5)),((4,9),(9,4),(6,6)),(),(),(),((4,10),(10,4),(5,8),(8,5)),(),((6,7),(7,6)),(),(),((5,9),(9,5)),(),(),((6,8),(8,6)),((7,7)),((5,10),(10,5)),(),(),(),((6,9),(9,6)),(),((7,8),(8,7)),(),(),(),((6,10),(10,6)),(),(),((7,9),(9,7)),((8,8)),(),(),(),(),(),((7,10),(10,7)),(),((8,9),(9,8)),(),(),(),(),(),(),(),((8,10),(10,8)),((9,9)),(),(),(),(),(),(),(),(),((9,10),(10,9)),(),(),(),(),(),(),(),(),(),((10,10)))
 
-listeSquareFullInit = [[1,7],[4,5],[9,4],[13,8],[17,4],[19,2],[20,8],[26,2],[34,5],[38,3],[42,4],[44,2],[48,8],[59,5],[63,6],[65,2],[67,6],[71,3],[82,7],[97,9]]
-gridInit = [0,1,1,1,2,2,2,2,2,3,3,3,3,4,4,4,4,5,5,6,7,7,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,10,10,10,10,11,11,12,12,12,12,13,13,13,13,13,13,13,13,13,13,13,14,14,14,14,15,15,16,16,17,17,17,17,18,18,18,18,18,18,18,18,18,18,18,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,20,20,20,20]
+listeSquareFullInit = None
+# [[1,7],[4,5],[9,4],[13,8],[17,4],[19,2],[20,8],[26,2],[34,5],[38,3],[42,4],[44,2],[48,8],[59,5],[63,6],[65,2],[67,6],[71,3],[82,7],[97,9]]
+gridInit = None
+# [0,1,1,1,2,2,2,2,2,3,3,3,3,4,4,4,4,5,5,6,7,7,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,10,10,10,10,11,11,12,12,12,12,13,13,13,13,13,13,13,13,13,13,13,14,14,14,14,15,15,16,16,17,17,17,17,18,18,18,18,18,18,18,18,18,18,18,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,20,20,20,20]
 
 class ListSquare:
-    listSquareEmpty = []
-    squareFull = None
     def __init__(self):
         self.listSquareEmpty = []
         self.squareFull = None
 
 class SquareFull:
-    valeur = None
-    #setSquareEmpty = set()
-    listListSquare = []
     def __init__(self, _valeur):
         self.listListSquare = []
         self.valeur = _valeur
     def removeList(self, squareList, SquareEmExcept):
         for i in squareList.listSquareEmpty:
             if i != SquareEmExcept:
-                # try:
                 i.removeList(squareList)
-                # except:
-                #     return
         self.listListSquare.remove(squareList)
         if len(self.listListSquare) == 1:
             global listGdSqFl
@@ -61,8 +56,6 @@ class SquareFull:
         print ''
 
 class SquareEmpty:
-    valeur = None
-    listListSquare = []
     def __init__(self, _valeur):
         self.valeur = _valeur
         self.listListSquare = []
@@ -76,6 +69,9 @@ class SquareEmpty:
             global listGdSqEm
             listGdSqEm.append(self)
 
+relationEm = None
+relationFl = None
+
 def notInFull(x): 
     global listeSquareFullInit
     return all(e[0] != x for e in listeSquareFullInit)
@@ -83,19 +79,40 @@ def notInFull(x):
 def inFull(x): 
     global listeSquareFullInit
     return any(e[0] == x for e in listeSquareFullInit)
-
-relationEm = dict()
-for i in filter(notInFull, range(1, 101)):
-    temp = SquareEmpty(i)
-    relationEm[i] = temp
-    listInitSqEm.append(temp)
-
-relationFl = dict()
-for i in filter(inFull, range(1, 101)):
-    temp = SquareFull(i)
-    relationFl[i] = temp
-
-#def column(x): return lambda y: y*10 + x
+    
+def init(tab):
+    global listeSquareFullInit
+    global gridInit
+    listeSquareFullInit = []
+    gridInit = []
+    for i in tab:
+        listeSquareFullInit.append([(i[1] - 1) * 10 + i[0], i[2]])
+    nbSquareFull = 0
+    nbSquare = 0
+    gridInit.append(nbSquareFull)
+    for i in listeSquareFullInit[1:]:
+        temp = listeSquareFullInit[listeSquareFullInit.index(i) - 1]
+        nbSquareFull += 1
+        nbSquare += 1
+        for j in range(i[0] - temp[0]):
+            gridInit.append(nbSquareFull)
+    nbSquareFull += 1
+    for i in range(nbSquare, 101):
+        gridInit.append(gridInit[-1])
+    gridInit.append(gridInit[-1])
+    print gridInit
+    print listeSquareFullInit
+    global relationEm
+    relationEm = dict()
+    for i in filter(notInFull, range(1, 101)):
+        temp = SquareEmpty(i)
+        relationEm[i] = temp
+        listInitSqEm.append(temp)
+    global relationFl
+    relationFl = dict()
+    for i in filter(inFull, range(1, 101)):
+        temp = SquareFull(i)
+        relationFl[i] = temp
 
 def clearListNotGood(list, j):
     for i in list[1]:
@@ -118,11 +135,10 @@ def allEmptySquare(list, minMoinsX, minPlusX, k, ind, j):
     else:
         return True, list, minMoinsX, minPlusX
 
-def f():
+def resolve():
     for i in listeSquareFullInit:
         squareFull = relationFl[i[0]]
         for j in diviseur[i[1] - 1]:
-            #col = (i[0] - 1) % 10
             minMoinsY = (i[0] - 1) / 10 - j[1] + 1
             if minMoinsY < 0:
                 minMoinsY = 0
@@ -135,7 +151,6 @@ def f():
             minPlusX = (i[0] + j[0] - 1) % 10
             if minPlusX < (i[0] - 1) % 10 + 1:
                 minPlusX = 10
-            #k = map(column(col + 1), range(minMoinsY, minPlusY))
             temp = [[],[],[]]
             minMoinsXBase = minMoinsX
             minPlusXBase = minPlusX
@@ -201,14 +216,33 @@ def f():
     for i in listInitSqEm:
         if len(i.listListSquare) == 1:
             listGdSqEm.append(i)
+    listInitSqEmCopy = None
+    indexListInitSqEm = 0
     while len(listInitSqEm) > 0:
-        while len(listGdSqFl) > 0:
-            while len(listGdSqFl) > 0:
-                temp = listGdSqFl.pop(0)
-                temp.addFinalList(temp.listListSquare[0])
-            while len(listGdSqEm) > 0:
-                temp = listGdSqEm.pop(0)
-                squareFull = temp.listListSquare[0].squareFull
-                squareFull.addFinalList(temp.listListSquare[0])
-        # if len(listInitSqEm) > 0:
+        try:
+            while len(listGdSqFl) > 0 or len(listGdSqEm) > 0:
+                while len(listGdSqFl) > 0:
+                    temp = listGdSqFl.pop(0)
+                    temp.addFinalList(temp.listListSquare[0])
+                while len(listGdSqEm) > 0:
+                    temp = listGdSqEm.pop(0)
+                    squareFull = temp.listListSquare[0].squareFull
+                    squareFull.addFinalList(temp.listListSquare[0])
+            if len(listInitSqEm) > 0:
+                listInitSqEmCopy = copy.deepcopy(listInitSqEm)
+                listGdSqEm.append(listInitSqEm[indexListInitSqEm])
+        except:
+            if listInitSqEmCopy != None:
+                listInitSqEm = listInitSqEmCopy
+                indexListInitSqEm += 1
+                listInitSqEmCopy = copy.deepcopy(listInitSqEm)
+                listGdSqEm.append(listInitSqEm[indexListInitSqEm])
+            else:
+                print 'error unknown'
+                return
 
+if __name__ == '__main__':
+    #test 1
+    tab = [[1,1,7],[4,1,5],[9,1,4],[3,2,8],[7,2,4],[9,2,2],[10,2,8],[6,3,2],[4,4,5],[8,4,3],[2,5,4],[4,5,2],[8,5,8],[9,6,5],[3,7,6],[5,7,2],[7,7,6],[1,8,3],[2,9,7],[7,10,9]]
+    init(tab)
+    resolve()
