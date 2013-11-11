@@ -17,9 +17,8 @@ public:
 	~BigNum(){};
 	BigNum(const BigNum& other);
 	BigNum(long long int i);
-	vector<long long int>& getListeNumbers(){
-		return listeNumbers;
-	}
+	vector<long long int>& getListeNumbers(){return listeNumbers;}
+	bool getNegatif(){return negatif;}
 	BigNum& operator = (const BigNum& other);
 	BigNum& operator = (long long int i);
 	BigNum operator + (BigNum& other);
@@ -28,6 +27,7 @@ public:
 	BigNum operator / (BigNum& other);
 protected:
 	vector<long long int> listeNumbers;
+	bool negatif;
 };
 
 ostream& operator << (ostream& os, BigNum& bigNum){
@@ -38,7 +38,7 @@ ostream& operator << (ostream& os, BigNum& bigNum){
 		if(it != liste.rbegin())
 			sprintf(buffer,"%.17lld",*it);
 		else{
-			if((*it & 0x8000000000000000) != 0){
+			if(bigNum.getNegatif()){
 				buffer[0] = '-';
 				sprintf(buffer+1,"%lld",(*it & 0x7fffffffffffffff));
 			}

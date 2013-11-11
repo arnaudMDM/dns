@@ -236,10 +236,14 @@ BigNum BigNum::operator + (BigNum& other){
 	if(listeNumbers.size() > other.listeNumbers.size()){
 		pMin = &(other.listeNumbers);
 		pMax = &listeNumbers;
+		if(negatif)
+			res.negatif = true;
 	}
 	else if(listeNumbers.size() < other.listeNumbers.size()){
 		pMin = &listeNumbers;
 		pMax = &(other.listeNumbers);
+		if(other.negatif)
+			res.negatif = true;
 	}
 	else{
 		vector<long long int>::reverse_iterator it1 = listeNumbers.rbegin();
@@ -273,9 +277,6 @@ BigNum BigNum::operator + (BigNum& other){
 	long long int temp;
 		
 	if((negatif && !other.negatif) || (!negatif && other.negatif)){
-
-		if((!negatif && listeNumbers.size() < other.listeNumbers.size()) || (negatif && listeNumbers.size() > other.listeNumbers.size()))
-			res.negatif = true;
 
 		while(itMin < pMin->end()){
 			temp = *itMax - *itMin - retenue;
@@ -350,9 +351,9 @@ BigNum BigNum::operator + (BigNum& other){
 }
 
 int main(){
-	BigNum j("1000000000000000000000000");
+	BigNum j("-1000000000000000000000000");
 	BigNum i("20000000000000000000000000000000000000000000000");
-	j = j * i;
+	j = j + i;
 	cout << j <<endl;
 	//15 minutes multiplication 745000 numbers (500000 * 280000) ; 19 minutes multiplication 745000 numbers (350000 * 390000)
 	//4.2 seconds addition 548000 numbers
