@@ -1,10 +1,15 @@
 # -*- coding: utf8 -*-
 import copy
+import color
+import random
+import sys
+
+random.seed()
 
 listInitSqEm = [] #listInitSquareFull
 listGdSqFl = [] #listGoodSquareFull
 listGdSqEm = [] #listGoodSquareEmpty
-listGdLstSqFinal = [] #listGoodListSquare
+listSqFinal = [] #listSquareFinal
 listItemsRm = []
 listItemsAdd = []
 
@@ -31,7 +36,7 @@ class SquareFull:
                 i.removeList(squareList, tryOne)
         self.listListSquare.remove(squareList)
         if tryOne:
-            listItemsRm.append([self, squareList])
+            listItemsRm.append([self.listListSquare, squareList])
         if len(self.listListSquare) == 1:
             global listGdSqFl
             listGdSqFl.append(self)
@@ -45,9 +50,12 @@ class SquareFull:
                 listItemsRm.append([listGdSqFl, self])
         except:
             pass
-        print 'full: ', self.valeur
+        valOutput = len(squareList.listSquareEmpty) + 1
+        colorOutput = random.choice(color.color)
+        global listSqFinal
+        listSqFinal[(self.valeur - 1) / 10][(self.valeur - 1) % 10] = [colorOutput,valOutput]
         for i in squareList.listSquareEmpty:
-            print 'vide: ', i.valeur
+            listSqFinal[(i.valeur - 1) / 10][(i.valeur - 1) % 10] = [colorOutput,valOutput]
             i.askSqFlsToRmList(self.valeur, tryOne)
             global listGdSqEm
             if listGdSqEm.count(i) > 0:
@@ -61,14 +69,9 @@ class SquareFull:
                     if j not in squareList.listSquareEmpty:
                         j.listListSquare.remove(i)
                         if tryOne:
-                            listItemsRm.append([j, i])
+                            listItemsRm.append([j.listListSquare, i])
                         if len(j.listListSquare) == 1:
                             listGdSqEm.append(j)
-        global listGdLstSqFinal
-        listGdLstSqFinal.append(squareList)
-        if tryOne:
-            listItemsAdd.append([listGdLstSqFinal, squareList])
-        print ''
 
 class SquareEmpty:
     def __init__(self, _valeur):
@@ -82,7 +85,7 @@ class SquareEmpty:
         global listItemsRm
         self.listListSquare.remove(squareList)
         if tryOne:
-            listItemsRm.append([self, squareList])
+            listItemsRm.append([self.listListSquare, squareList])
         if len(self.listListSquare) == 1:
             global listGdSqEm
             listGdSqEm.append(self)
@@ -101,8 +104,20 @@ def inFull(x):
 def init(tab):
     global listeSquareFullInit
     global gridInit
+    global listInitSqEm
+    global listGdSqFl
+    global listGdSqEm
+    global listItemsRm
+    global listItemsAdd
+    global listSqFinal
+    listInitSqEm = []
+    listGdSqFl = []
+    listGdSqEm = []
+    listItemsRm = []
+    listItemsAdd = []
     listeSquareFullInit = []
     gridInit = []
+    listSqFinal = [[0 for i in range(10)] for j in range(10)]
     for i in tab:
         listeSquareFullInit.append([(i[1] - 1) * 10 + i[0], i[2]])
     nbSquareFull = 0
@@ -254,7 +269,6 @@ def resolve():
                     squareFull = temp.listListSquare[0].squareFull
                     squareFull.addFinalList(temp.listListSquare[0], tryOne)
             if len(listInitSqEm) > 0:
-                print 'oui'
                 if listItemsRm != []:
                     listListItemsRm.append(listItemsRm)
                     listListItemsAdd.append(listItemsAdd)
@@ -297,10 +311,26 @@ def resolve():
             squareFull.addFinalList(temp.listListSquare[indexSqEm], tryOne)
             indexSqEm += 1
 
+def printLinePretty2(x): return x[0] + str(x[1]).rjust(3)
+def printLinePretty(x): return ''.join(map(printLinePretty2, x))
+
 if __name__ == '__main__':
-    #test 1
-    tab = [[1,1,7],[4,1,5],[9,1,4],[3,2,8],[7,2,4],[9,2,2],[10,2,8],[6,3,2],[4,4,5],[8,4,3],[2,5,4],[4,5,2],[8,5,8],[9,6,5],[3,7,6],[5,7,2],[7,7,6],[1,8,3],[2,9,7],[7,10,9]]
-    #tab = [[8,1,5],[8,2,9],[9,2,12],[3,3,9],[4,3,6],[3,4,3],[4,4,6],[7,7,6],[8,7,3],[7,8,4],[8,8,6],[2,9,12],[3,9,9],[3,10,10]]
-    #tab = [[10,2,10],[4,3,24],[8,4,4],[3,7,24],[7,8,20],[1,9,18]]
+    try:
+        sys.stdout = color.WTCW(sys.stdout)
+    except Exception as e:
+        print e
+    #test
+    #tab = [[1,1,7],[4,1,5],[9,1,4],[3,2,8],[7,2,4],[9,2,2],[10,2,8],[6,3,2],[4,4,5],[8,4,3],[2,5,4],[4,5,2],[8,5,8],[9,6,5],[3,7,6],[5,7,2],[7,7,6],[1,8,3],[2,9,7],[7,10,9]]
+    #case 1
+    print '{rgb}case 1' 
+    tab = [[8,1,5],[8,2,9],[9,2,12],[3,3,9],[4,3,6],[3,4,3],[4,4,6],[7,7,6],[8,7,3],[7,8,4],[8,8,6],[2,9,12],[3,9,9],[3,10,10]]
     init(tab)
     resolve()
+    print '\n'.join(map(printLinePretty,listSqFinal))
+    print ''
+    #case 2
+    print '{rgb}case 2'
+    tab = [[10,2,10],[4,3,24],[8,4,4],[3,7,24],[7,8,20],[1,9,18]]
+    init(tab)
+    resolve()
+    print '\n'.join(map(printLinePretty,listSqFinal))
