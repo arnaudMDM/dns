@@ -351,9 +351,9 @@ BigNum BigNum::operator + (BigNum& other){
 }
 
 int main(){
-	BigNum j("-1000000000000000000000000");
+	BigNum j("-1000000300000000000000000");
 	BigNum i("20000000000000000000000000000000000000000000000");
-	j = j + i;
+	j = j * i;
 	cout << j <<endl;
 	//15 minutes multiplication 745000 numbers (500000 * 280000) ; 19 minutes multiplication 745000 numbers (350000 * 390000)
 	//4.2 seconds addition 548000 numbers
