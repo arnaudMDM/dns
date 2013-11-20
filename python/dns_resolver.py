@@ -11,7 +11,7 @@ def findIP(website):
     query.rd = 0
     query.addQuestion(website, DRType.A, DQClass.IN)
     query.convertInStr()
-    result = query.sendQuery(listRootServers[2])
+    result = query.sendQuery('91.121.69.41')
     print result
 
-findIP('allocine.fr')
+findIP('www.allocine.fr')
