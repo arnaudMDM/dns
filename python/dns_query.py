@@ -36,9 +36,15 @@ class DQClass: # DNS Query Class
     NONE = 254 # not implemented
     ANY = 255 # not implmented 
 
+class DRCode: # DNS RCode
+    NOERROR = 0
+    FORMERR = 1
+    SERVFAIL = 2
+    NXDOMAIN = 3
+
 class DnsQuery:
     _id = 1
-    TIME_OUT = 20 # secondes
+    TIME_OUT = 5 # secondes
     def __init__(self):
         # qr: query/response, op: operation code, aa: authoritative answer flag, tc: truncation, rd: recursion desired, ra: recursion available, rc: response code
         self.op = self.rd = self.flags = None
@@ -63,7 +69,7 @@ class DnsQuery:
                 debut = False
             else:
                 result += '.'
-            if length == 192:
+            if length == 192 or length == 193:
                 # print 'index', index
                 # print 'length', length
                 result += self.DnsNotInStr(data, struct.unpack('>B', data[index + 1])[0])[1]
@@ -100,11 +106,11 @@ class DnsQuery:
             for i in range(index, index + length - 1):
                 result = result + str(ord(data[i])) + '.'
             result += str(ord(data[index + length - 1]))
-        elif typ == DRType.NS:
+        elif typ == DRType.NS or typ == DRType.CNAME:
             result += self.DnsNotInStr(data, index)[1]
         elif typ == DRType.AAAA:
             for i in range(index, index + length - 2, 2):
-                result = result + '{:02x}'.format(ord(data[i])) + '{:02x}'.format(ord(data[i + 1])) + '.'
+                result = result + '{:02x}'.format(ord(data[i])) + '{:02x}'.format(ord(data[i + 1])) + ':'
             result += '{:02x}'.format(ord(data[index + length - 2])) + '{:02x}'.format(ord(data[index + length - 1]))
         else:
             pass
@@ -117,7 +123,7 @@ class DnsQuery:
         nbAn = struct.unpack('>H', data[6] + data[7])[0]
         nbAu = struct.unpack('>H', data[8] + data[9])[0]
         nbAd = struct.unpack('>H', data[10] + data[11])[0]
-        if rc != 0:
+        if rc != DRCode.NOERROR:
             return aa, tc, ra, rc, nbAn, nbAu, nbAd, None, None, None
         else:
             index = len(self.request)
@@ -146,19 +152,29 @@ class DnsQuery:
                     index += length
                     i[0].append(temp)
             return aa, tc, ra, rc, nbAn, nbAu, nbAd, listAns, listAus, listAds
-    def sendQuery(self, ip):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    def clearQuestion(self):
+        self.listQs = ''
+        print self.listQs
+        self.nbQ = 0
+    def sendQuery(self, ip, IPv4):
+        if IPv4:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        else:
+            s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         host = ip
         port = 53
-        bytes = BitArray(bytes=self.request)
-        print bytes.bin
-        s.sendto(self.request, (host, port))
+        # bytes = BitArray(bytes=self.request)
+        # print bytes.bin
+        if IPv4:
+            s.sendto(self.request, (host, port))
+        else:
+            s.sendto(self.request, (host, port, 0, 0))
         timeStart = time.time()
         s.settimeout(DnsQuery.TIME_OUT)
         while(time.time() - timeStart < DnsQuery.TIME_OUT):
             result, addr = s.recvfrom(1024)
             if addr == (host,port) and string.find(result,self.id) == 0:
-                print BitArray(bytes=result).bin
+                # print BitArray(bytes=result).bin
                 return self.process(result)
             else:
                 print 'oups'

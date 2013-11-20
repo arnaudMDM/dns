@@ -11,7 +11,38 @@ def findIP(website):
     query.rd = 0
     query.addQuestion(website, DRType.A, DQClass.IN)
     query.convertInStr()
-    result = query.sendQuery('91.121.69.41')
-    print result
-
-findIP('www.allocine.fr')
+    listAdress = listRootServers
+    result = []
+    while True:
+        for i in listAdress:
+            if i.find('.') != -1:
+                IPv4 = True
+            else:
+                IPv4 = False
+            finish, tc, ra, err, nbAn, nbAu, nbAd, listAns, listAus, listAds = query.sendQuery(i, IPv4)
+            if err != DRCode.SERVFAIL:
+                print i
+                break
+        if err != DRCode.NOERROR:
+            raise 'error', err
+        # print err, tc, ra, listAns, listAus, listAds
+        if finish:
+            if nbAn != 0:
+                if listAns[0][1] == DRType.A or listAns[0][1] == DRType.AAAA:
+                    for i in listAns:
+                        if i[1] == DRType.A or i[1] == DRType.AAAA:
+                            result.append(i[5])
+                    break
+                elif listAns[0][1] == DRType.CNAME:
+                    website = listAns[0][5]
+                    query.clearQuestion()
+                    query.addQuestion(website, DRType.A, DQClass.IN)
+                    query.convertInStr()
+                    listAdress = listRootServers
+            else:
+                raise 'error: we should have one result'
+        else:
+            listAdress = [ x[5] for x in listAds ]
+    return result
+# def test():
+print findIP('www.allocine.fr')
