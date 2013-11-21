@@ -8,7 +8,7 @@ listRootServers = ['198.41.0.4', '192.228.79.201', '192.33.4.12', '199.7.91.13',
 def findIP(website):
     query = DnsQuery()
     query.op = DQFlags.QUERY
-    query.rd = 0
+    query.rd = DQFlags.RECURSION_NOT_DESIRED
     query.addQuestion(website, DRType.A, DQClass.IN)
     query.convertInStr()
     listAdress = listRootServers
@@ -19,12 +19,14 @@ def findIP(website):
                 IPv4 = True
             else:
                 IPv4 = False
+                # print i
             finish, tc, ra, err, nbAn, nbAu, nbAd, listAns, listAus, listAds = query.sendQuery(i, IPv4)
+            # print query.sendQuery('2001:4860:4860::8888', False)
             if err != DRCode.SERVFAIL:
                 print i
                 break
         if err != DRCode.NOERROR:
-            raise 'error', err
+            raise Exception('error', err)
         # print err, tc, ra, listAns, listAus, listAds
         if finish:
             if nbAn != 0:
@@ -40,9 +42,12 @@ def findIP(website):
                     query.convertInStr()
                     listAdress = listRootServers
             else:
-                raise 'error: we should have one result'
+                raise Exception('error: we should have one result')
         else:
-            listAdress = [ x[5] for x in listAds ]
+            if nbAd == 0:
+                listAdress = findIP(listAus[0][5])
+            else:
+                listAdress = [ x[5] for x in listAds ]
     return result
 # def test():
-print findIP('www.allocine.fr')
+print findIP('twitter.com')

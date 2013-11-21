@@ -44,7 +44,7 @@ class DRCode: # DNS RCode
 
 class DnsQuery:
     _id = 1
-    TIME_OUT = 5 # secondes
+    TIME_OUT = 1 # secondes
     def __init__(self):
         # qr: query/response, op: operation code, aa: authoritative answer flag, tc: truncation, rd: recursion desired, ra: recursion available, rc: response code
         self.op = self.rd = self.flags = None
@@ -59,7 +59,7 @@ class DnsQuery:
         self.nbQ = self.nbAn = self.nbAu = self.nbAd = 0
         # q: question, an: answer resource records, au: authority resource records, ad: additional resource records
         self.request = self.listQs = self.listAns = self.listAus = self.listAds = ''
-    def DnsNotInStr(self, data, index):
+    def dnsNotInStr(self, data, index):
         result = ''
         length = struct.unpack('>B', data[index])[0]
         debut = True
@@ -72,7 +72,7 @@ class DnsQuery:
             if length == 192 or length == 193:
                 # print 'index', index
                 # print 'length', length
-                result += self.DnsNotInStr(data, struct.unpack('>B', data[index + 1])[0])[1]
+                result += self.dnsNotInStr(data, struct.unpack('>B', data[index + 1])[0])[1]
                 index += 2
                 return index, result
             # print 'index', index
@@ -107,7 +107,7 @@ class DnsQuery:
                 result = result + str(ord(data[i])) + '.'
             result += str(ord(data[index + length - 1]))
         elif typ == DRType.NS or typ == DRType.CNAME:
-            result += self.DnsNotInStr(data, index)[1]
+            result += self.dnsNotInStr(data, index)[1]
         elif typ == DRType.AAAA:
             for i in range(index, index + length - 2, 2):
                 result = result + '{:02x}'.format(ord(data[i])) + '{:02x}'.format(ord(data[i + 1])) + ':'
@@ -137,7 +137,7 @@ class DnsQuery:
                 for j in range(i[1]):
                     # print index
                     temp = []
-                    index, name = self.DnsNotInStr(data, index)
+                    index, name = self.dnsNotInStr(data, index)
                     temp.append(name)
                     # print name
                     typ = struct.unpack('>H', data[index] + data[index + 1])[0]
@@ -165,16 +165,18 @@ class DnsQuery:
         port = 53
         # bytes = BitArray(bytes=self.request)
         # print bytes.bin
-        if IPv4:
-            s.sendto(self.request, (host, port))
-        else:
-            s.sendto(self.request, (host, port, 0, 0))
+        s.sendto(self.request, (host, port))
         timeStart = time.time()
-        s.settimeout(DnsQuery.TIME_OUT)
-        while(time.time() - timeStart < DnsQuery.TIME_OUT):
-            result, addr = s.recvfrom(1024)
-            if addr == (host,port) and string.find(result,self.id) == 0:
-                # print BitArray(bytes=result).bin
-                return self.process(result)
-            else:
-                print 'oups'
+        try:
+            s.settimeout(DnsQuery.TIME_OUT)
+            while(time.time() - timeStart < DnsQuery.TIME_OUT):
+                result, addr = s.recvfrom(1024)
+                if addr == (host,port) and string.find(result,self.id) == 0:
+                    # print BitArray(bytes=result).bin
+                    return self.process(result)
+                else:
+                    print 'oups'
+            raise Exception('timed out')
+        except Exception as e:
+            print e
+            return None, None, None, DRCode.SERVFAIL, None, None, None, None, None, None
