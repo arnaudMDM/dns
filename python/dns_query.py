@@ -3,7 +3,7 @@ import struct
 import socket
 import time
 import string
-from bitstring import BitArray
+# from bitstring import BitArray
 
 class DQFlags: #DNS Query Flags
     QUERY = 0 # qr

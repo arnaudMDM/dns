@@ -27,7 +27,7 @@ def findIP(website):
                 break
         if err != DRCode.NOERROR:
             raise Exception('error', err)
-        # print err, tc, ra, listAns, listAus, listAds
+        # print err, finish, tc, ra, listAns, listAus, listAds
         if finish:
             if nbAn != 0:
                 if listAns[0][1] == DRType.A or listAns[0][1] == DRType.AAAA:
@@ -50,4 +50,4 @@ def findIP(website):
                 listAdress = [ x[5] for x in listAds ]
     return result
 # def test():
-print findIP('twitter.com')
+print findIP('www.allocine.fr')
