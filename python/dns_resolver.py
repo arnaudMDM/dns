@@ -18,15 +18,13 @@ def findIP(website):
                 IPv4 = True
             else:
                 IPv4 = False
-                # print i
             finish, tc, ra, err, nbAn, nbAu, nbAd, listAns, listAus, listAds = query.sendQuery(i, IPv4)
-            # print query.sendQuery('2001:4860:4860::8888', False)
             if err != DRCode.SERVFAIL:
                 print i
                 break
         if err != DRCode.NOERROR:
             raise Exception('error', err)
-        print err, finish, tc, ra, listAns, listAus, listAds
+        # print err, finish, tc, ra, listAns, listAus, listAds
         if finish:
             if nbAn != 0:
                 if listAns[0][1] == DRType.A or listAns[0][1] == DRType.AAAA:
@@ -49,14 +47,14 @@ def findIP(website):
                 temp = [x[5] for x in listAus]
                 for i in temp:
                     try:
-                        print "{"
+                        # print "{"
                         listAdress = findIP(i)
-                        print "}"
+                        # print "}"
                         break
                     except:
                         pass
             else:
                 listAdress = [ x[5] for x in listAds ]
     return result
-# def test():
+    
 print findIP('docs.python.org')

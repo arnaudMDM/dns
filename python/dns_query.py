@@ -17,16 +17,6 @@ class DRType: # DNS Record Type
     A = 1 # IPv4
     NS = 2 # an authoritative name server
     CNAME = 5 # the canonical name for an alias; not implemented
-    SOA = 6 # marks the start of a zone of authority; not implemented
-    WKS = 11 # a well known service description; not implemented
-    PTR = 12 # a domain name pointer; not implemented
-    HINFO = 13 # host information; not implemented
-    MINFO = 14 #mailbox or mail list information; not implemented
-    MX = 15 # mail exchange; not implemented
-    TXT = 16 # text strings; not implemented
-    RP = 17 # for responsible person; not implemented
-    AFSDB = 18 # for AFS Data Base location; not implemented
-    X25 = 19 # for X.25 PSDN address; not implemented
     AAAA = 28 # IPv6
 
 class DQClass: # DNS Query Class
@@ -63,20 +53,15 @@ class DnsQuery:
         result = ''
         length = struct.unpack('>B', data[index])[0]
         debut = True
-        # print 'index', index
         while length != 0:
             if debut:
                 debut = False
             else:
                 result += '.'
             if length == 192 or length == 193:
-                # print 'index', index
-                # print 'length', length
                 result += self.dnsNotInStr(data, struct.unpack('>B', data[index + 1])[0])[1]
                 index += 2
                 return index, result
-            # print 'index', index
-            # print 'length', length
             for i in range(index + 1, index + 1 + length):
                 result += data[i]
             index = index + length + 1
@@ -89,7 +74,6 @@ class DnsQuery:
         for i in website:
             result += struct.pack('>B', len(i))
             result += i
-        # for i in range((len(result) % 32) / 8):
         result += struct.pack('>B', 0)
         return result
     def addQuestion(self, website, typ, cla):
@@ -101,7 +85,6 @@ class DnsQuery:
         self.request = self.id + struct.pack('>H', self.flags) + struct.pack('>H', self.nbQ) + struct.pack('>H', self.nbAn) + struct.pack('>H', self.nbAu) + struct.pack('>H', self.nbAd) + self.listQs + self.listAns + self.listAus + self.listAds
     def processRData(self, typ, data, index, length):
         result = ''
-        # print typ
         if typ == DRType.A:
             for i in range(index, index + length - 1):
                 result = result + str(ord(data[i])) + '.'
@@ -131,22 +114,17 @@ class DnsQuery:
             listAus = [] 
             listAds = []
             listTemp = [[listAns, nbAn], [listAus, nbAu], [listAds,nbAd]]
-            # print listTemp
             for i in listTemp:
-                # print 'oui', i[1]
                 for j in range(i[1]):
-                    # print index
                     temp = []
                     index, name = self.dnsNotInStr(data, index)
                     temp.append(name)
-                    # print name
                     typ = struct.unpack('>H', data[index] + data[index + 1])[0]
                     temp.append(typ)
                     temp.append(struct.unpack('>H', data[index + 2] + data[index + 3])[0])
                     temp.append(struct.unpack('>I', data[index + 4] + data[index + 5] + data[index + 6] + data[index + 7])[0])
                     length = struct.unpack('>H', data[index + 8] + data[index + 9])[0]
                     temp.append(length)
-                    # print 'length', length
                     index = index + 10
                     temp.append(self.processRData(typ, data, index, length))
                     index += length
@@ -163,8 +141,6 @@ class DnsQuery:
             s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         host = ip
         port = 53
-        # bytes = BitArray(bytes=self.request)
-        # print bytes.bin
         s.sendto(self.request, (host, port))
         timeStart = time.time()
         try:
