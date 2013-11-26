@@ -26,7 +26,7 @@ def findIP(website):
                 break
         if err != DRCode.NOERROR:
             raise Exception('error', err)
-        # print err, finish, tc, ra, listAns, listAus, listAds
+        print err, finish, tc, ra, listAns, listAus, listAds
         if finish:
             if nbAn != 0:
                 if listAns[0][1] == DRType.A or listAns[0][1] == DRType.AAAA:
@@ -35,6 +35,7 @@ def findIP(website):
                             result.append(i[5])
                     break
                 elif listAns[0][1] == DRType.CNAME:
+                    # we have this case for this website: www.google.fr 
                     website = listAns[0][5]
                     query.clearQuestion()
                     query.addQuestion(website, DRType.A, DQClass.IN)
@@ -44,9 +45,18 @@ def findIP(website):
                 raise Exception('error: we should have one result')
         else:
             if nbAd == 0:
-                listAdress = findIP(listAus[0][5])
+                # we have this case for this website: docs.python.org
+                temp = [x[5] for x in listAus]
+                for i in temp:
+                    try:
+                        print "{"
+                        listAdress = findIP(i)
+                        print "}"
+                        break
+                    except:
+                        pass
             else:
                 listAdress = [ x[5] for x in listAds ]
     return result
 # def test():
-print findIP('www.allocine.fr')
+print findIP('docs.python.org')
