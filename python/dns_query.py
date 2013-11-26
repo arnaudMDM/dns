@@ -35,6 +35,7 @@ class DRCode: # DNS RCode
 class DnsQuery:
     _id = 1
     TIME_OUT = 1 # secondes
+
     def __init__(self):
         # qr: query/response, op: operation code, aa: authoritative answer flag, tc: truncation, rd: recursion desired, ra: recursion available, rc: response code
         self.op = self.rd = self.flags = None
@@ -49,6 +50,7 @@ class DnsQuery:
         self.nbQ = self.nbAn = self.nbAu = self.nbAd = 0
         # q: question, an: answer resource records, au: authority resource records, ad: additional resource records
         self.request = self.listQs = self.listAns = self.listAus = self.listAds = ''
+
     def dnsNotInStr(self, data, index):
         result = ''
         length = struct.unpack('>B', data[index])[0]
@@ -68,6 +70,7 @@ class DnsQuery:
             length = struct.unpack('>B', data[index])[0]
         index += 1
         return index, result
+
     def strInDnsNot(self,website):
         website = website.split('.')
         result = ''
@@ -76,13 +79,16 @@ class DnsQuery:
             result += i
         result += struct.pack('>B', 0)
         return result
+
     def addQuestion(self, website, typ, cla):
         question = self.strInDnsNot(website) + struct.pack('>H',typ) + struct.pack('>H', cla)
         self.listQs += question
         self.nbQ += 1
+
     def convertInStr(self):
         self.flags = self.rc + (self.ra << 7) + (self.rd << 8) + (self.tc << 9) + (self.aa << 10) + (self.op << 11) + (self.listQsr << 15)
         self.request = self.id + struct.pack('>H', self.flags) + struct.pack('>H', self.nbQ) + struct.pack('>H', self.nbAn) + struct.pack('>H', self.nbAu) + struct.pack('>H', self.nbAd) + self.listQs + self.listAns + self.listAus + self.listAds
+
     def processRData(self, typ, data, index, length):
         result = ''
         if typ == DRType.A:
@@ -98,6 +104,7 @@ class DnsQuery:
         else:
             pass
         return result
+
     def process(self, data):
         aa = (ord(data[2]) >> 2) & 1 == 1
         tc = (ord(data[2]) >> 1) & 1 == 1
@@ -130,10 +137,12 @@ class DnsQuery:
                     index += length
                     i[0].append(temp)
             return aa, tc, ra, rc, nbAn, nbAu, nbAd, listAns, listAus, listAds
+
     def clearQuestion(self):
         self.listQs = ''
         print self.listQs
         self.nbQ = 0
+        
     def sendQuery(self, ip, IPv4):
         if IPv4:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

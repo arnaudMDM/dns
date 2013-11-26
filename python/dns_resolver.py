@@ -4,7 +4,7 @@ import struct
 
 listRootServers = ['198.41.0.4', '192.228.79.201', '192.33.4.12', '199.7.91.13', '192.203.230.10', '192.5.5.241', '192.112.36.4', '128.63.2.53', '192.36.148.17', '192.58.128.30', '193.0.14.129', '199.7.83.42', '202.12.27.3']
 
-def findIP(website):
+def findIP(website, show):
     query = DnsQuery()
     query.op = DQFlags.QUERY
     query.rd = DQFlags.RECURSION_NOT_DESIRED
@@ -20,7 +20,8 @@ def findIP(website):
                 IPv4 = False
             finish, tc, ra, err, nbAn, nbAu, nbAd, listAns, listAus, listAds = query.sendQuery(i, IPv4)
             if err != DRCode.SERVFAIL:
-                print i
+                if show:
+                    print i
                 break
         if err != DRCode.NOERROR:
             raise Exception('error', err)
@@ -48,7 +49,7 @@ def findIP(website):
                 for i in temp:
                     try:
                         # print "{"
-                        listAdress = findIP(i)
+                        listAdress = findIP(i, False)
                         # print "}"
                         break
                     except:
@@ -56,5 +57,5 @@ def findIP(website):
             else:
                 listAdress = [ x[5] for x in listAds ]
     return result
-    
-print findIP('docs.python.org')
+
+print findIP('stackoverflow.com', True)
